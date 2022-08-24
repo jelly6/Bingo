@@ -10,6 +10,8 @@ import android.view.MenuItem;
 
 import com.firebase.ui.auth.AuthUI;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.Arrays;
 
@@ -38,20 +40,28 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
 
     @Override
     public void onAuthStateChanged(@NonNull FirebaseAuth auth) {
+        FirebaseUser user = auth.getCurrentUser();
         if(auth.getCurrentUser() != null){
             Log.d(TAG, "onAuthStateChanged: "+auth.getCurrentUser());
-
+            FirebaseDatabase.getInstance().getReference("users")
+                    .child(user.getUid())
+                    .child("displayName")
+                    .setValue(user.getDisplayName());
         }else{
             Log.d(TAG, "onAuthStateChanged: ");
-            startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder().setAvailableProviders(Arrays.asList(
-                    new AuthUI.IdpConfig.EmailBuilder().build(),
-                    new AuthUI.IdpConfig.GoogleBuilder().build(),
-                    new AuthUI.IdpConfig.AnonymousBuilder().build()
-            ))
-            //.setIsSmartLockEnabled(false)
-            .build(),RC_SIGN_IN);
+            signUp();
 
         }
+    }
+
+    private void signUp() {
+        startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder().setAvailableProviders(Arrays.asList(
+                new AuthUI.IdpConfig.EmailBuilder().build(),
+                new AuthUI.IdpConfig.GoogleBuilder().build(),
+                new AuthUI.IdpConfig.AnonymousBuilder().build()
+        ))
+        //.setIsSmartLockEnabled(false)
+        .build(),RC_SIGN_IN);
     }
 
     @Override
