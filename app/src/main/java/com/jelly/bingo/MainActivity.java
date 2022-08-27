@@ -1,6 +1,7 @@
 package com.jelly.bingo;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.Group;
@@ -8,6 +9,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -27,6 +29,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
@@ -242,7 +245,18 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
                         GameRoom room = new GameRoom(editRoomTitle.getText().toString(),member);
                         FirebaseDatabase.getInstance().getReference("rooms")
                                 .push()
-                                .setValue(room);
+                                .setValue(room, new DatabaseReference.CompletionListener() {
+                                    @Override
+                                    public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
+                                        Log.d(TAG, "onComplete: "+error+'/'+ref.getKey());
+                                        if(error==null){
+                                            Intent intent = new Intent(MainActivity.this, BingoActivity.class);
+                                            intent.putExtra("ROOM_ID",ref.getKey());
+                                            intent.putExtra("IS_CREATOR",true);
+                                            startActivity(intent);
+                                        }
+                                    }
+                                });
 
                     }
                 })
