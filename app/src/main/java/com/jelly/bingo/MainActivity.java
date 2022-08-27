@@ -16,6 +16,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.firebase.ui.auth.AuthUI;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -36,6 +37,7 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
     int[] avatarsIds = new int[]{R.drawable.avatar_0,R.drawable.avatar_1,R.drawable.avatar_2,R.drawable.avatar_3,R.drawable.avatar_4,R.drawable.avatar_5,R.drawable.avatar_6};
     private Group group_avarars;
     private ImageView avatar;
+    private FloatingActionButton fab;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +77,14 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
         findViewById(R.id.avatar_4).setOnClickListener(this);
         findViewById(R.id.avatar_5).setOnClickListener(this);
         findViewById(R.id.avatar_6).setOnClickListener(this);
+
+        fab = findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showＲoomDialog();
+            }
+        });
 
     }
 
@@ -169,6 +179,26 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
                                 .child(auth.getUid())
                                 .child("nickName")
                                 .setValue(editNickname.getText().toString());
+                    }
+                })
+                .show();
+
+    }
+    private void showＲoomDialog() {
+        EditText editRoomTitle = new EditText(this);
+        editRoomTitle.setText("Welcome");
+        new AlertDialog.Builder(this)
+                .setTitle("Game Room")
+                .setMessage("Please enter your room title:")
+                .setView(editRoomTitle)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        GameRoom room = new GameRoom(editRoomTitle.getText().toString(),member);
+                        FirebaseDatabase.getInstance().getReference("rooms")
+                                .push()
+                                .setValue(room);
+
                     }
                 })
                 .show();
