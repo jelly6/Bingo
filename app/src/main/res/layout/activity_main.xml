@@ -45,4 +45,84 @@
         app:layout_constraintTop_toTopOf="@+id/nickname"
         app:srcCompat="@drawable/avatar_0" />
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/avatar">
+
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/group_avatars"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:constraint_referenced_ids="avatar_0,avatar_1,avatar_2,avatar_3,avatar_4,avatar_5,avatar_6"/>
+
+        <ImageView
+            android:id="@+id/avatar_0"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/avatar_0" />
+
+        <ImageView
+            android:id="@+id/avatar_1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            app:layout_constraintStart_toEndOf="@+id/avatar_0"
+            app:layout_constraintTop_toTopOf="@+id/avatar_0"
+            app:srcCompat="@drawable/avatar_1" />
+
+        <ImageView
+            android:id="@+id/avatar_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            app:layout_constraintStart_toEndOf="@+id/avatar_1"
+            app:layout_constraintTop_toTopOf="@+id/avatar_1"
+            app:srcCompat="@drawable/avatar_2" />
+
+        <ImageView
+            android:id="@+id/avatar_3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            app:layout_constraintStart_toEndOf="@+id/avatar_2"
+            app:layout_constraintTop_toTopOf="@+id/avatar_2"
+            app:srcCompat="@drawable/avatar_3" />
+
+        <ImageView
+            android:id="@+id/avatar_4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            app:layout_constraintStart_toEndOf="@+id/avatar_3"
+            app:layout_constraintTop_toTopOf="@+id/avatar_3"
+            app:srcCompat="@drawable/avatar_4" />
+
+        <ImageView
+            android:id="@+id/avatar_5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            app:layout_constraintStart_toEndOf="@+id/avatar_4"
+            app:layout_constraintTop_toTopOf="@+id/avatar_4"
+            app:srcCompat="@drawable/avatar_5" />
+
+        <ImageView
+            android:id="@+id/avatar_6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            app:layout_constraintStart_toEndOf="@+id/avatar_5"
+            app:layout_constraintTop_toTopOf="@+id/avatar_5"
+            app:srcCompat="@drawable/avatar_6" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
