@@ -37,6 +37,7 @@
         app:srcCompat="@drawable/avatar_0" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraintLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
@@ -44,12 +45,6 @@
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/avatar">
-
-        <androidx.constraintlayout.widget.Group
-            android:id="@+id/group_avatars"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:constraint_referenced_ids="avatar_0,avatar_1,avatar_2,avatar_3,avatar_4,avatar_5,avatar_6"/>
 
         <ImageView
             android:id="@+id/avatar_0"
@@ -114,6 +109,22 @@
             app:layout_constraintStart_toEndOf="@+id/avatar_5"
             app:layout_constraintTop_toTopOf="@+id/avatar_5"
             app:srcCompat="@drawable/avatar_6" />
+
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/group_avatars"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:constraint_referenced_ids="avatar_0,avatar_1,avatar_2,avatar_3,avatar_4,avatar_5,avatar_6" />
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/constraintLayout" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

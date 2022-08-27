@@ -1,6 +1,7 @@
 package com.jelly.bingo;
 
 public class GameRoom {
+    String id;
     String title;
     int status;
     Member init;
@@ -13,6 +14,14 @@ public class GameRoom {
 
     public GameRoom(){
 
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getTitle() {

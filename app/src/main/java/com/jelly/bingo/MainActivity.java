@@ -4,40 +4,48 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.Group;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.firebase.ui.auth.AuthUI;
+import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.Arrays;
+import java.util.TreeMap;
 
 public class MainActivity extends AppCompatActivity implements FirebaseAuth.AuthStateListener, View.OnClickListener {
     public static final String TAG = MainActivity.class.getSimpleName();
     private static final int RC_SIGN_IN = 100;
     private FirebaseAuth auth;
-    private TextView tv_nickname;
-    private ImageView iv_avatar;
+    private TextView nickText;
+    private ImageView avatarImg;
     private Member member;
-    int[] groupIds = new int[]{R.id.avatar_0,R.id.avatar_1,R.id.avatar_2,R.id.avatar_3,R.id.avatar_4,R.id.avatar_5,R.id.avatar_6};
     int[] avatarsIds = new int[]{R.drawable.avatar_0,R.drawable.avatar_1,R.drawable.avatar_2,R.drawable.avatar_3,R.drawable.avatar_4,R.drawable.avatar_5,R.drawable.avatar_6};
-    private Group group_avarars;
+    private Group avararGroup;
     private ImageView avatar;
     private FloatingActionButton fab;
+    private FirebaseRecyclerAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,24 +57,23 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
     }
 
     private void findViews() {
-        tv_nickname = findViewById(R.id.nickname);
-        iv_avatar = findViewById(R.id.avatar);
-        tv_nickname.setOnClickListener(new View.OnClickListener() {
+        nickText = findViewById(R.id.nickname);
+        avatarImg = findViewById(R.id.avatar);
+        nickText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 showNicknameDialog(member.getNickName());
             }
         });
-        group_avarars = findViewById(R.id.group_avatars);
-        avatar = findViewById(R.id.avatar);
-        group_avarars.setVisibility(View.GONE);
-        avatar.setOnClickListener(new View.OnClickListener() {
+        avararGroup = findViewById(R.id.group_avatars);
+        avararGroup.setVisibility(View.GONE);
+        avatarImg.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(group_avarars.getVisibility() == View.GONE){
-                    group_avarars.setVisibility(View.VISIBLE);
+                if(avararGroup.getVisibility() == View.GONE){
+                    avararGroup.setVisibility(View.VISIBLE);
                 }else{
-                    group_avarars.setVisibility(View.GONE);
+                    avararGroup.setVisibility(View.GONE);
                 }
             }
         });
@@ -85,19 +92,57 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
                 showＲoomDialog();
             }
         });
+        RecyclerView recycler = findViewById(R.id.recycler);
+        recycler.setHasFixedSize(true);
+        recycler.setLayoutManager(new LinearLayoutManager(this));
 
+        Query query = FirebaseDatabase.getInstance().getReference("rooms")
+                .limitToLast(20);
+        FirebaseRecyclerOptions<GameRoom> options = new FirebaseRecyclerOptions.Builder<GameRoom>()
+                .setQuery(query,GameRoom.class)
+                .build();
+        adapter = new FirebaseRecyclerAdapter<GameRoom, RoomHolder>(options) {
+            @NonNull
+            @Override
+            public RoomHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+                View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.room_layout,parent,false);
+                return new RoomHolder(view);
+            }
+
+            @Override
+            protected void onBindViewHolder(@NonNull RoomHolder holder, int position, @NonNull GameRoom model) {
+                holder.roomTitleText.setText(model.getTitle());
+                holder.roomAvatarImg.setImageResource(avatarsIds[model.getInit().getAvatarId()]);
+            }
+        };
+        recycler.setAdapter(adapter);
+
+
+
+    }
+
+    public class RoomHolder extends RecyclerView.ViewHolder{
+        ImageView roomAvatarImg;
+        TextView roomTitleText;
+        public RoomHolder(@NonNull View itemView) {
+            super(itemView);
+            roomAvatarImg = itemView.findViewById(R.id.room_avatar);
+            roomTitleText = itemView.findViewById(R.id.room_title);
+        }
     }
 
     @Override
     protected void onStart() {
         auth.addAuthStateListener(this);
         super.onStart();
+        adapter.startListening();
     }
 
     @Override
     protected void onStop() {
         auth.removeAuthStateListener(this);
         super.onStop();
+        adapter.stopListening();
     }
 
     @Override
@@ -118,7 +163,7 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
                             member = snapshot.getValue(Member.class);
                             if(member !=null){
                                 if(member.getNickName()!=null){
-                                    tv_nickname.setText(member.getNickName());
+                                    nickText.setText(member.getNickName());
                                 }else{
                                     showNicknameDialog(auth.getCurrentUser().getDisplayName());
 
@@ -127,7 +172,7 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
                                         .child(auth.getUid())
                                         .child("uid")
                                         .setValue(auth.getUid());
-                                avatar.setImageResource(avatarsIds[member.getAvatarId()]);
+                                avatarImg.setImageResource(avatarsIds[member.getAvatarId()]);
 
                             }else{
                             }
@@ -258,6 +303,6 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
                 .child(auth.getUid())
                 .child("avatarId")
                 .setValue(selected);
-        group_avarars.setVisibility(View.GONE);
+        avararGroup.setVisibility(View.GONE);
     }
 }
