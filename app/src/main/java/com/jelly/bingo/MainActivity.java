@@ -116,6 +116,14 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
             protected void onBindViewHolder(@NonNull RoomHolder holder, int position, @NonNull GameRoom model) {
                 holder.roomTitleText.setText(model.getTitle());
                 holder.roomAvatarImg.setImageResource(avatarsIds[model.getInit().getAvatarId()]);
+                holder.itemView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Intent bingo = new Intent(MainActivity.this,BingoActivity.class);
+                        bingo.putExtra("ROOM_ID", model.getId());
+                        startActivity(bingo);
+                    }
+                });
             }
         };
         recycler.setAdapter(adapter);
@@ -152,12 +160,11 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
     public void onAuthStateChanged(@NonNull FirebaseAuth auth) {
         FirebaseUser user = auth.getCurrentUser();
         if(auth.getCurrentUser() != null){
-            Log.d(TAG, "onAuthStateChanged: "+auth.getCurrentUser());
-            /*FirebaseDatabase.getInstance().getReference("users")
+            Log.d(TAG, "onAuthStateChanged: "+auth.getCurrentUser().getDisplayName());
+            FirebaseDatabase.getInstance().getReference("users")
                     .child(user.getUid())
                     .child("displayName")
                     .setValue(user.getDisplayName());
-            */
             FirebaseDatabase.getInstance().getReference("users")
                     .child(user.getUid())
                     .addValueEventListener(new ValueEventListener() {
@@ -254,6 +261,11 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
                                             intent.putExtra("ROOM_ID",ref.getKey());
                                             intent.putExtra("IS_CREATOR",true);
                                             startActivity(intent);
+                                            FirebaseDatabase.getInstance().getReference("rooms")
+                                                    .child(ref.getKey())
+                                                    .child("id")
+                                                    .setValue(ref.getKey());
+
                                         }
                                     }
                                 });
@@ -270,7 +282,7 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
                 new AuthUI.IdpConfig.GoogleBuilder().build(),
                 new AuthUI.IdpConfig.AnonymousBuilder().build()
         ))
-        //.setIsSmartLockEnabled(false)
+        .setIsSmartLockEnabled(false)
         .build(),RC_SIGN_IN);
     }
 

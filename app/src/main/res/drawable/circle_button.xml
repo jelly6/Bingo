@@ -4,14 +4,14 @@
         android:state_enabled="true">
         <shape
             android:shape='oval'>
-            <solid android:color = '#4957a7'/>
+            <solid android:color = "#03A9F4"/>
         </shape>
     </item>
     <item
         android:state_enabled="false">
         <shape
             android:shape='oval'>
-            <solid android:color = '#9649a7'/>
+            <solid android:color = "#F44336"/>
         </shape>
     </item>
 

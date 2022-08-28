@@ -12,14 +12,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.GridLayout;
 
+import com.firebase.ui.common.ChangeEventType;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class BingoActivity extends AppCompatActivity {
     public String TAG = BingoActivity.class.getSimpleName();
@@ -42,6 +46,8 @@ public class BingoActivity extends AppCompatActivity {
                         .setValue(false);
             }
         }
+        // find pos by number
+        Map<Integer, Integer> numberMap = new HashMap<Integer, Integer>();
         List<NumberButton> buttons = new ArrayList<>();
         for (int i = 0; i < 25; i++) {
             NumberButton button = new NumberButton(this);
@@ -49,6 +55,9 @@ public class BingoActivity extends AppCompatActivity {
             buttons.add(button);
         }
         Collections.shuffle(buttons);
+        for (int i = 0; i < 25; i++) {
+            numberMap.put(buttons.get(i).getNumber(),i);
+        }
 
         RecyclerView recycler = findViewById(R.id.game_recycler);
         recycler.setHasFixedSize(true);
@@ -70,9 +79,26 @@ public class BingoActivity extends AppCompatActivity {
             }
 
             @Override
+            public void onChildChanged(@NonNull ChangeEventType type, @NonNull DataSnapshot snapshot, int newIndex, int oldIndex) {
+                super.onChildChanged(type, snapshot, newIndex, oldIndex);
+                //Log.d(TAG, "onChildChanged: "+type+"/"+snapshot.getKey());
+                if(type== ChangeEventType.CHANGED){
+                    int number = Integer.parseInt(snapshot.getKey());
+                    boolean isPicked = snapshot.getValue(Boolean.class);
+                    int pos = numberMap.get(number);
+                    Log.d(TAG, "onChildChanged: "+pos);
+                    BallHolder holder= (BallHolder) recycler.findViewHolderForAdapterPosition(pos);
+                    holder.button.setEnabled(!isPicked);
+                }
+
+
+
+            }
+
+            @Override
             protected void onBindViewHolder(@NonNull BallHolder holder, int position, @NonNull Boolean model) {
                 Log.d(TAG, "onBindViewHolder: "+position);
-                holder.button.setEnabled(!model);
+                //holder.button.setEnabled(!model);
                 holder.button.setText(String.valueOf(buttons.get(position).getNumber()));
             }
         };
