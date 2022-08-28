@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.GridLayout;
+import android.widget.TextView;
 
 import com.firebase.ui.common.ChangeEventType;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
@@ -26,8 +27,16 @@ import java.util.List;
 import java.util.Map;
 
 public class BingoActivity extends AppCompatActivity {
+    public static final int STATUS_CREATED = 1;
+    public static final int STATUS_JOINED = 2;
+    public static final int STATUS_CREATED_TURN = 3;
+    public static final int STATUS_JOINED_TURN = 4;
+    public static final int STATUS_DONE = 5;
+    boolean isMyTurn = false;
     public String TAG = BingoActivity.class.getSimpleName();
     private FirebaseRecyclerAdapter<Boolean, BallHolder> adapter;
+    private TextView info;
+    private RecyclerView recycler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +45,7 @@ public class BingoActivity extends AppCompatActivity {
         String roomId = getIntent().getStringExtra("ROOM_ID");
         boolean isCreator = getIntent().getBooleanExtra("IS_CREATOR", false);
         Log.d(TAG, "onCreate: " + roomId + "/" + isCreator);
+        findViews();
 
         if (isCreator) {
             for (int i = 0; i < 25; i++) {
@@ -45,7 +55,10 @@ public class BingoActivity extends AppCompatActivity {
                         .child(String.valueOf(i + 1))
                         .setValue(false);
             }
+            isMyTurn = true;
+            info.setText("Waiting for the join..");
         }
+
         // find pos by number
         Map<Integer, Integer> numberMap = new HashMap<Integer, Integer>();
         List<NumberButton> buttons = new ArrayList<>();
@@ -59,9 +72,7 @@ public class BingoActivity extends AppCompatActivity {
             numberMap.put(buttons.get(i).getNumber(),i);
         }
 
-        RecyclerView recycler = findViewById(R.id.game_recycler);
-        recycler.setHasFixedSize(true);
-        recycler.setLayoutManager(new GridLayoutManager(this, 5));
+        // recyclerView for numbers
 
         Query query = FirebaseDatabase.getInstance().getReference("rooms")
                 .child(roomId)
@@ -106,6 +117,13 @@ public class BingoActivity extends AppCompatActivity {
 
     }
 
+    private void findViews() {
+        info = findViewById(R.id.info);
+        recycler = findViewById(R.id.game_recycler);
+        recycler.setHasFixedSize(true);
+        recycler.setLayoutManager(new GridLayoutManager(this, 5));
+    }
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -128,4 +146,6 @@ public class BingoActivity extends AppCompatActivity {
             button = itemView.findViewById(R.id.button);
         }
     }
+
+
 }
