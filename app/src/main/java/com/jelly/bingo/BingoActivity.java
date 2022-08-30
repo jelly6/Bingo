@@ -173,17 +173,12 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
                     .child("numbers")
                     .child(String.valueOf(button.getNumber()))
                     .setValue(true);
-            if(isCreator){
-                FirebaseDatabase.getInstance().getReference("rooms")
-                        .child(roomId)
-                        .child("status")
-                        .setValue(STATUS_JOINED_TURN);
-            }else{
-                FirebaseDatabase.getInstance().getReference("rooms")
-                        .child(roomId)
-                        .child("status")
-                        .setValue(STATUS_CREATED_TURN);
-            }
+            int status = isCreator? STATUS_JOINED_TURN:STATUS_CREATED_TURN;
+            FirebaseDatabase.getInstance().getReference("rooms")
+                    .child(roomId)
+                    .child("status")
+                    .setValue(status);
+
 
         }
 
@@ -199,16 +194,10 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
 
                 break;
             case STATUS_CREATED_TURN:
-                if(isCreator){
-                    isMyTurn=true;
-                }else{
-
-                }
+                isMyTurn = isCreator? true:false;
                 break;
             case STATUS_JOINED_TURN:
-                if(!isCreator){
-                    isMyTurn=true;
-                }
+                isMyTurn = !isCreator? true:false;
                 break;
             case STATUS_DONE:
                 break;
@@ -219,6 +208,7 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
         } else {
             info.setText("Wait for other's selection");
         }
+
     }
 
 
