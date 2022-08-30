@@ -17,8 +17,10 @@ import com.firebase.ui.common.ChangeEventType;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,7 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class BingoActivity extends AppCompatActivity implements View.OnClickListener {
+public class BingoActivity extends AppCompatActivity implements View.OnClickListener, ValueEventListener {
     public static final int STATUS_CREATED = 1;
     public static final int STATUS_JOINED = 2;
     public static final int STATUS_CREATED_TURN = 3;
@@ -38,13 +40,14 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
     private TextView info;
     private RecyclerView recycler;
     private String roomId;
+    private boolean isCreator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_bingo);
         roomId = getIntent().getStringExtra("ROOM_ID");
-        boolean isCreator = getIntent().getBooleanExtra("IS_CREATOR", false);
+        isCreator = getIntent().getBooleanExtra("IS_CREATOR", false);
         Log.d(TAG, "onCreate: " + roomId + "/" + isCreator);
         findViews();
 
@@ -58,7 +61,23 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
             }
             isMyTurn = true;
             info.setText("Waiting for the join..");
+        }else{
+            FirebaseDatabase.getInstance().getReference("rooms")
+                    .child(roomId)
+                    .child("status")
+                    .setValue(STATUS_JOINED);
+            FirebaseDatabase.getInstance().getReference("rooms")
+                    .child(roomId)
+                    .child("status")
+                    .setValue(STATUS_CREATED_TURN);
+            info.setText("Waiting for other's selection..");
+
         }
+
+        FirebaseDatabase.getInstance().getReference("rooms")
+                .child(roomId)
+                .child("status")
+                .addValueEventListener(this);
 
         // find pos by number
         Map<Integer, Integer> numberMap = new HashMap<Integer, Integer>();
@@ -148,11 +167,64 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
         NumberButton button = (NumberButton) view;
         Log.d(TAG, "onClick: button "+button.getNumber()+"/ "+button.getPos());
         //button.setEnabled(button.isPicked());
-        FirebaseDatabase.getInstance().getReference("rooms")
-                .child(roomId)
-                .child("numbers")
-                .child(String.valueOf(button.getNumber()))
-                .setValue(true);
+        if(isMyTurn){
+            FirebaseDatabase.getInstance().getReference("rooms")
+                    .child(roomId)
+                    .child("numbers")
+                    .child(String.valueOf(button.getNumber()))
+                    .setValue(true);
+            if(isCreator){
+                FirebaseDatabase.getInstance().getReference("rooms")
+                        .child(roomId)
+                        .child("status")
+                        .setValue(STATUS_JOINED_TURN);
+            }else{
+                FirebaseDatabase.getInstance().getReference("rooms")
+                        .child(roomId)
+                        .child("status")
+                        .setValue(STATUS_CREATED_TURN);
+            }
+
+        }
+
+    }
+
+    @Override
+    public void onDataChange(@NonNull DataSnapshot snapshot) {
+        long status = (long) snapshot.getValue();
+        switch ((int) status){
+            case STATUS_CREATED:
+                break;
+            case STATUS_JOINED:
+
+                break;
+            case STATUS_CREATED_TURN:
+                if(isCreator){
+                    isMyTurn=true;
+                }else{
+
+                }
+                break;
+            case STATUS_JOINED_TURN:
+                if(!isCreator){
+                    isMyTurn=true;
+                }
+                break;
+            case STATUS_DONE:
+                break;
+        }
+
+        if (isMyTurn) {
+            info.setText("Please select a Number..");
+        } else {
+            info.setText("Wait for other's selection");
+        }
+    }
+
+
+    @Override
+    public void onCancelled(@NonNull DatabaseError error) {
+
     }
 
 
