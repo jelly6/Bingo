@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class BingoActivity extends AppCompatActivity {
+public class BingoActivity extends AppCompatActivity implements View.OnClickListener {
     public static final int STATUS_CREATED = 1;
     public static final int STATUS_JOINED = 2;
     public static final int STATUS_CREATED_TURN = 3;
@@ -37,12 +37,13 @@ public class BingoActivity extends AppCompatActivity {
     private FirebaseRecyclerAdapter<Boolean, BallHolder> adapter;
     private TextView info;
     private RecyclerView recycler;
+    private String roomId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_bingo);
-        String roomId = getIntent().getStringExtra("ROOM_ID");
+        roomId = getIntent().getStringExtra("ROOM_ID");
         boolean isCreator = getIntent().getBooleanExtra("IS_CREATOR", false);
         Log.d(TAG, "onCreate: " + roomId + "/" + isCreator);
         findViews();
@@ -70,6 +71,7 @@ public class BingoActivity extends AppCompatActivity {
         Collections.shuffle(buttons);
         for (int i = 0; i < 25; i++) {
             numberMap.put(buttons.get(i).getNumber(),i);
+            buttons.get(i).setPos(i);
         }
 
         // recyclerView for numbers
@@ -98,6 +100,7 @@ public class BingoActivity extends AppCompatActivity {
                     boolean isPicked = snapshot.getValue(Boolean.class);
                     int pos = numberMap.get(number);
                     Log.d(TAG, "onChildChanged: "+pos);
+                    buttons.get(pos).setPicked(isPicked);
                     BallHolder holder= (BallHolder) recycler.findViewHolderForAdapterPosition(pos);
                     holder.button.setEnabled(!isPicked);
                 }
@@ -111,6 +114,10 @@ public class BingoActivity extends AppCompatActivity {
                 Log.d(TAG, "onBindViewHolder: "+position);
                 //holder.button.setEnabled(!model);
                 holder.button.setText(String.valueOf(buttons.get(position).getNumber()));
+                holder.button.setNumber(buttons.get(position).getNumber());
+                holder.button.setEnabled(!buttons.get(position).isPicked());
+                holder.button.setOnClickListener(BingoActivity.this);
+
             }
         };
         recycler.setAdapter(adapter);
@@ -134,6 +141,18 @@ public class BingoActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         adapter.stopListening();
+    }
+
+    @Override
+    public void onClick(View view) {
+        NumberButton button = (NumberButton) view;
+        Log.d(TAG, "onClick: button "+button.getNumber()+"/ "+button.getPos());
+        //button.setEnabled(button.isPicked());
+        FirebaseDatabase.getInstance().getReference("rooms")
+                .child(roomId)
+                .child("numbers")
+                .child(String.valueOf(button.getNumber()))
+                .setValue(true);
     }
 
 
