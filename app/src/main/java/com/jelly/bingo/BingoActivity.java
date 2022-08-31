@@ -1,6 +1,7 @@
 package com.jelly.bingo;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -19,6 +20,7 @@ import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
@@ -36,7 +38,7 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
     public static final int STATUS_JOINED_TURN = 4;
     public static final int STATUS_CREATED_DONE = 5;
     public static final int STATUS_JOIN_DONE = 6;
-    int BINGO_TARGET = 4;
+    int BINGO_TARGET = 3;
     boolean isMyTurn = false;
     public String TAG = BingoActivity.class.getSimpleName();
     private FirebaseRecyclerAdapter<Boolean, BallHolder> adapter;
@@ -46,10 +48,15 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
     private boolean isCreator;
     private List<NumberButton> buttons;
     private TextView lineInfo;
+    private boolean isBingo;
+
 
     ValueEventListener stateListener = new ValueEventListener() {
         @Override
         public void onDataChange(@NonNull DataSnapshot snapshot) {
+            if(snapshot.getValue() ==null){
+                endGame();
+            }
             long status = (long) snapshot.getValue();
             switch ((int) status){
                 case STATUS_CREATED:
@@ -114,10 +121,25 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
 
         }
     };
-    private boolean isBingo;
 
     private void endGame() {
-        //TODO:
+        FirebaseDatabase.getInstance().getReference("rooms")
+                .child(roomId)
+                .child("status")
+                .removeEventListener(stateListener);
+        if(isCreator){
+            FirebaseDatabase.getInstance().getReference("rooms")
+                    .child(roomId)
+                    .removeValue(new DatabaseReference.CompletionListener() {
+                        @Override
+                        public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
+                            if(error == null){
+                                finish();
+                            }
+                        }
+                    });
+
+        }
     }
 
     @Override
@@ -251,6 +273,20 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
             if(sum>=5){
                 count +=1;
             }
+        }
+        int sum = 0;
+        for (int i = 0; i < 5; i++) {
+            sum += bingo[6*i];
+        }
+        if(sum>=5){
+            count +=1;
+        }
+        sum = 0;
+        for (int i = 0; i < 5; i++) {
+            sum += bingo[4*(i+1)];
+        }
+        if(sum>=5){
+            count +=1;
         }
         lineInfo.setText(String.valueOf(count));
         if(count>=target){
