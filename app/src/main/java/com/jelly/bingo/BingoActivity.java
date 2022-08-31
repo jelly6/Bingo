@@ -1,10 +1,12 @@
 package com.jelly.bingo;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -41,6 +43,7 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
     private RecyclerView recycler;
     private String roomId;
     private boolean isCreator;
+    private List<NumberButton> buttons;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,7 +84,7 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
 
         // find pos by number
         Map<Integer, Integer> numberMap = new HashMap<Integer, Integer>();
-        List<NumberButton> buttons = new ArrayList<>();
+        buttons = new ArrayList<>();
         for (int i = 0; i < 25; i++) {
             NumberButton button = new NumberButton(this);
             button.setNumber(i+1);
@@ -122,6 +125,8 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
                     buttons.get(pos).setPicked(isPicked);
                     BallHolder holder= (BallHolder) recycler.findViewHolderForAdapterPosition(pos);
                     holder.button.setEnabled(!isPicked);
+
+                    check_bingo();
                 }
 
 
@@ -141,6 +146,34 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
         };
         recycler.setAdapter(adapter);
 
+    }
+
+    private void check_bingo() {
+        int count = 0;
+        for(int i = 0 ; i < 5; i++){
+            Boolean isLine1 = true;
+            Boolean isLine2 = true;
+
+            for (int i1 = 0; i1 < 5; i1++) {
+                isLine1 = isLine1&buttons.get(i1*5+i).isPicked();
+                isLine2 = isLine1&buttons.get(i*5+i1).isPicked();
+                Log.d(TAG, "check_bingo line1: "+buttons.get(i1*5+i).getPos()+"/"+isLine1);
+
+            }
+            if(isLine1){
+                count = count+1;
+            }
+            if(isLine2){
+                count = count+1;
+            }
+        }
+        Log.d(TAG, "check_bingo: "+count);
+        if(count>2){
+            FirebaseDatabase.getInstance().getReference("rooms")
+                    .child(roomId)
+                    .child("status")
+                    .setValue(STATUS_DONE);
+        }
     }
 
     private void findViews() {
@@ -200,6 +233,16 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
                 isMyTurn = !isCreator? true:false;
                 break;
             case STATUS_DONE:
+                isMyTurn = false;
+                new AlertDialog.Builder(this)
+                        .setTitle("Congratulations~!")
+                        .setMessage("Yon win the game.!!")
+                        .setPositiveButton("Leave", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                finish();
+                            }
+                        }).show();
                 break;
         }
 
