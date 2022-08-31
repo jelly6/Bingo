@@ -12,7 +12,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.GridLayout;
 import android.widget.TextView;
 
 import com.firebase.ui.common.ChangeEventType;
@@ -30,12 +29,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class BingoActivity extends AppCompatActivity implements View.OnClickListener, ValueEventListener {
+public class BingoActivity extends AppCompatActivity implements View.OnClickListener {
     public static final int STATUS_CREATED = 1;
     public static final int STATUS_JOINED = 2;
     public static final int STATUS_CREATED_TURN = 3;
     public static final int STATUS_JOINED_TURN = 4;
-    public static final int STATUS_DONE = 5;
+    public static final int STATUS_CREATED_DONE = 5;
+    public static final int STATUS_JOIN_DONE = 6;
+    int BINGO_TARGET = 4;
     boolean isMyTurn = false;
     public String TAG = BingoActivity.class.getSimpleName();
     private FirebaseRecyclerAdapter<Boolean, BallHolder> adapter;
@@ -44,6 +45,80 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
     private String roomId;
     private boolean isCreator;
     private List<NumberButton> buttons;
+    private TextView lineInfo;
+
+    ValueEventListener stateListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(@NonNull DataSnapshot snapshot) {
+            long status = (long) snapshot.getValue();
+            switch ((int) status){
+                case STATUS_CREATED:
+                    info.setText("Wait for the join..");
+                    break;
+                case STATUS_JOINED:
+
+                    break;
+                case STATUS_CREATED_TURN:
+                    isMyTurn = isCreator? true:false;
+                    info.setText(isCreator? "Please select a number..":"Wait for other's selection..");
+                    break;
+                case STATUS_JOINED_TURN:
+                    isMyTurn = !isCreator? true:false;
+                    info.setText(!isCreator? "Please select a number..":"Wait for other's selection..");
+
+                    break;
+                case STATUS_CREATED_DONE:
+                    isMyTurn = false;
+                    if(!isCreator){
+                        isBingo = check_bingo(BINGO_TARGET);
+
+                    }
+                    new AlertDialog.Builder(BingoActivity.this)
+                            .setTitle("Bingo~!")
+                            .setMessage((isCreator || isBingo)? "You win the game..":"You lose the game..")
+                            .setPositiveButton("Leave", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    endGame();
+                                }
+                            }).show();
+                    break;
+                case STATUS_JOIN_DONE:
+                    isMyTurn = false;
+                    if(isCreator){
+                        isBingo = check_bingo(BINGO_TARGET);
+
+                    }
+                    new AlertDialog.Builder(BingoActivity.this)
+                            .setTitle("Bingo~!")
+                            .setMessage((!isCreator || isBingo) ? "You win the game..":"You lose the game..")
+                            .setPositiveButton("Leave", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    endGame();
+                                }
+                            }).show();
+                break;
+            }
+
+//            if (isMyTurn) {
+//                info.setText("Please select a Number..");
+//            } else {
+//                info.setText("Wait for other's selection");
+//            }
+
+        }
+
+        @Override
+        public void onCancelled(@NonNull DatabaseError error) {
+
+        }
+    };
+    private boolean isBingo;
+
+    private void endGame() {
+        //TODO:
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +137,7 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
                         .child(String.valueOf(i + 1))
                         .setValue(false);
             }
-            isMyTurn = true;
+            //isMyTurn = true;
             info.setText("Waiting for the join..");
         }else{
             FirebaseDatabase.getInstance().getReference("rooms")
@@ -77,10 +152,7 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
 
         }
 
-        FirebaseDatabase.getInstance().getReference("rooms")
-                .child(roomId)
-                .child("status")
-                .addValueEventListener(this);
+
 
         // find pos by number
         Map<Integer, Integer> numberMap = new HashMap<Integer, Integer>();
@@ -126,14 +198,24 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
                     BallHolder holder= (BallHolder) recycler.findViewHolderForAdapterPosition(pos);
                     holder.button.setEnabled(!isPicked);
 
-                    check_bingo();
                 }
+                boolean isBingo = check_bingo(BINGO_TARGET);
+
+                if(isBingo){
+                    FirebaseDatabase.getInstance().getReference("rooms")
+                            .child(roomId)
+                            .child("status")
+                            .setValue(isCreator? STATUS_CREATED_DONE:STATUS_JOIN_DONE);
+
+                }
+
+
 
 
 
             }
 
-            @Override
+            @Override//
             protected void onBindViewHolder(@NonNull BallHolder holder, int position, @NonNull Boolean model) {
                 Log.d(TAG, "onBindViewHolder: "+position);
                 //holder.button.setEnabled(!model);
@@ -148,31 +230,33 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
 
     }
 
-    private void check_bingo() {
+    private boolean check_bingo(int target) {
         int count = 0;
-        for(int i = 0 ; i < 5; i++){
-            Boolean isLine1 = true;
-            Boolean isLine2 = true;
-
-            for (int i1 = 0; i1 < 5; i1++) {
-                isLine1 = isLine1&buttons.get(i1*5+i).isPicked();
-                isLine2 = isLine1&buttons.get(i*5+i1).isPicked();
-                Log.d(TAG, "check_bingo line1: "+buttons.get(i1*5+i).getPos()+"/"+isLine1);
-
+        int[] bingo = new int[25];
+        for (int i = 0; i < 25; i++) {
+            bingo[i] = buttons.get(i).isPicked() ? 1 : 0 ;
+        }
+        for (int i = 0; i < 5; i++) {
+            int sum = 0;
+            for (int j = 0; j < 5; j++) {
+                sum += bingo[j+5*i];
             }
-            if(isLine1){
-                count = count+1;
+            if(sum>=5){
+                count +=1;
             }
-            if(isLine2){
-                count = count+1;
+            sum = 0;
+            for (int j = 0; j < 5; j++) {
+                sum += bingo[i+5*j];
+            }
+            if(sum>=5){
+                count +=1;
             }
         }
-        Log.d(TAG, "check_bingo: "+count);
-        if(count>2){
-            FirebaseDatabase.getInstance().getReference("rooms")
-                    .child(roomId)
-                    .child("status")
-                    .setValue(STATUS_DONE);
+        lineInfo.setText(String.valueOf(count));
+        if(count>=target){
+            return true;
+        }else{
+            return false;
         }
     }
 
@@ -181,12 +265,18 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
         recycler = findViewById(R.id.game_recycler);
         recycler.setHasFixedSize(true);
         recycler.setLayoutManager(new GridLayoutManager(this, 5));
+        lineInfo = findViewById(R.id.lineInfo);
+        lineInfo.setText(String.valueOf(0));
     }
 
     @Override
     protected void onStart() {
         super.onStart();
         adapter.startListening();
+        FirebaseDatabase.getInstance().getReference("rooms")
+                .child(roomId)
+                .child("status")
+                .addValueEventListener(stateListener);
     }
 
     @Override
@@ -217,46 +307,9 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
 
     }
 
-    @Override
-    public void onDataChange(@NonNull DataSnapshot snapshot) {
-        long status = (long) snapshot.getValue();
-        switch ((int) status){
-            case STATUS_CREATED:
-                break;
-            case STATUS_JOINED:
-
-                break;
-            case STATUS_CREATED_TURN:
-                isMyTurn = isCreator? true:false;
-                break;
-            case STATUS_JOINED_TURN:
-                isMyTurn = !isCreator? true:false;
-                break;
-            case STATUS_DONE:
-                isMyTurn = false;
-                new AlertDialog.Builder(this)
-                        .setTitle("Congratulations~!")
-                        .setMessage("Yon win the game.!!")
-                        .setPositiveButton("Leave", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                finish();
-                            }
-                        }).show();
-                break;
-        }
-
-        if (isMyTurn) {
-            info.setText("Please select a Number..");
-        } else {
-            info.setText("Wait for other's selection");
-        }
-
-    }
-
 
     @Override
-    public void onCancelled(@NonNull DatabaseError error) {
+    public void onPointerCaptureChanged(boolean hasCapture) {
 
     }
 
