@@ -80,6 +80,7 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
                 }
             }
         });
+        // for avatar selection
         findViewById(R.id.avatar_0).setOnClickListener(this);
         findViewById(R.id.avatar_1).setOnClickListener(this);
         findViewById(R.id.avatar_2).setOnClickListener(this);
@@ -88,6 +89,7 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
         findViewById(R.id.avatar_5).setOnClickListener(this);
         findViewById(R.id.avatar_6).setOnClickListener(this);
 
+        //float action button
         fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -193,26 +195,6 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
 
                         }
                     });
-
-            /*FirebaseDatabase.getInstance().getReference("user")
-                    .child(user.getUid())
-                    .child("nickName")
-                    .addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot snapshot) {
-                            if(snapshot.getValue()!=null){
-                                Log.d(TAG, "onDataChange: "+snapshot.getValue().toString());
-
-                            }else{
-                                showNicknameDialog(user.getDisplayName());
-                            }
-                        }
-
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError error) {
-
-                        }
-                    });*/
         }else{
             Log.d(TAG, "onAuthStateChanged: ");
             signUp();
@@ -279,10 +261,9 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
     private void signUp() {
         startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder().setAvailableProviders(Arrays.asList(
                 new AuthUI.IdpConfig.EmailBuilder().build(),
-                new AuthUI.IdpConfig.GoogleBuilder().build(),
-                new AuthUI.IdpConfig.AnonymousBuilder().build()
+                new AuthUI.IdpConfig.GoogleBuilder().build()
         ))
-        .setIsSmartLockEnabled(false)
+        .setIsSmartLockEnabled(false) // for test login function
         .build(),RC_SIGN_IN);
     }
 

@@ -20,8 +20,6 @@ public class NumberButton extends androidx.appcompat.widget.AppCompatButton {
         this.number = number;
     }
 
-
-
     public int getPos() {
         return pos;
     }

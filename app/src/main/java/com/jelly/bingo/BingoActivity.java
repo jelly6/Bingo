@@ -50,7 +50,7 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
     private TextView lineInfo;
     private boolean isBingo;
 
-
+    // observe the status of the game
     ValueEventListener stateListener = new ValueEventListener() {
         @Override
         public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -80,6 +80,7 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
                         isBingo = check_bingo(BINGO_TARGET);
 
                     }
+                    // show when there is winner
                     new AlertDialog.Builder(BingoActivity.this)
                             .setTitle("Bingo~!")
                             .setMessage((isCreator || isBingo)? "You win the game..":"You lose the game..")
@@ -96,6 +97,7 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
                         isBingo = check_bingo(BINGO_TARGET);
 
                     }
+                    // show when there is winner
                     new AlertDialog.Builder(BingoActivity.this)
                             .setTitle("Bingo~!")
                             .setMessage((!isCreator || isBingo) ? "You win the game..":"You lose the game..")
@@ -108,11 +110,6 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
                 break;
             }
 
-//            if (isMyTurn) {
-//                info.setText("Please select a Number..");
-//            } else {
-//                info.setText("Wait for other's selection");
-//            }
 
         }
 
@@ -121,7 +118,7 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
 
         }
     };
-
+    // end game and delete the room from firebase
     private void endGame() {
         FirebaseDatabase.getInstance().getReference("rooms")
                 .child(roomId)
@@ -150,7 +147,7 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
         isCreator = getIntent().getBooleanExtra("IS_CREATOR", false);
         Log.d(TAG, "onCreate: " + roomId + "/" + isCreator);
         findViews();
-
+        // create 25 numbers in the Firebase
         if (isCreator) {
             for (int i = 0; i < 25; i++) {
                 FirebaseDatabase.getInstance().getReference("rooms")
@@ -162,6 +159,7 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
             //isMyTurn = true;
             info.setText("Waiting for the join..");
         }else{
+            // when someone join the game, change the status create
             FirebaseDatabase.getInstance().getReference("rooms")
                     .child(roomId)
                     .child("status")
@@ -191,7 +189,6 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
         }
 
         // recyclerView for numbers
-
         Query query = FirebaseDatabase.getInstance().getReference("rooms")
                 .child(roomId)
                 .child("numbers")
@@ -231,10 +228,6 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
 
                 }
 
-
-
-
-
             }
 
             @Override//
@@ -251,7 +244,7 @@ public class BingoActivity extends AppCompatActivity implements View.OnClickList
         recycler.setAdapter(adapter);
 
     }
-
+    // check now many lines you reach
     private boolean check_bingo(int target) {
         int count = 0;
         int[] bingo = new int[25];
